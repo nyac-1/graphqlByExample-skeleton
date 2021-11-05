@@ -21,7 +21,8 @@ app.use(cors(), bodyParser.json(), expressJwt({
 
 const typeDefs = gql(fs.readFileSync('./schema.graphql', {encoding: 'utf8'}));
 const resolvers = require('./resolvers.js');
-const apolloServer = new ApolloServer({typeDefs, resolvers});
+const context = ({req}) => ({user: req.user && db.users.get(req.user.sub)});
+const apolloServer = new ApolloServer({typeDefs, resolvers, context});
 apolloServer.applyMiddleware({app, path: "/testing-gql"});
 
 app.post('/login', (req, res) => {

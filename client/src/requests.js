@@ -1,23 +1,24 @@
+import { getAccessToken, isLoggedIn } from './auth';
 const endpointURL = "http://localhost:9000/testing-gql";
 
-async function graphqlRequest(query, variables = {}) {
-    const response = await fetch(endpointURL,{
-        method: 'POST',
-        headers: {'content-type':'application/json'},
-        body: JSON.stringify({
-            query,
-            variables
-        })
-    });
 
-    const responseBody = await response.json();
-    if(responseBody.errors){
-        const message = response.errors.map((error)=>error.message).join('\n');
-        throw new Error('GraphQL Error\n'+message);
-    }
-    return responseBody.data;
+async function graphqlRequest(query, variables={}) {
+  const request = {
+    method: 'POST',
+    headers: {'content-type': 'application/json'},
+    body: JSON.stringify({query, variables})
+  };
+  if (isLoggedIn()) {
+    request.headers['authorization'] = 'Bearer ' + getAccessToken();
+  }
+  const response = await fetch(endpointURL, request);
+  const responseBody = await response.json();
+  if (responseBody.errors) {
+    const message = responseBody.errors.map((error) => error.message).join('\n');
+    throw new Error(message);
+  }
+  return responseBody.data;
 }
-
 
 export async function loadJobs() {
     const query=`query GetAllJobsQuery{
